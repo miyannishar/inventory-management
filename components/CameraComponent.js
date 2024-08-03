@@ -3,8 +3,10 @@ import React, { useState, useRef } from 'react';
 import { Camera } from 'react-camera-pro';
 import { Button, Box, Typography } from '@mui/material';
 import axios from 'axios';
+import e from 'cors';
 
 const CameraComponent = ({ onDetection, inventoryItems }) => {
+  
   const camera = useRef(null);
   const [image, setImage] = useState(null);
   const [detecting, setDetecting] = useState(false);
