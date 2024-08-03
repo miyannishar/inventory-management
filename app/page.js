@@ -29,8 +29,8 @@ export default function Home() {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <TopBar toggleDrawer={toggleDrawer} />
-      <Sidebar open={drawerOpen} onClose={toggleDrawer(false)} onPageChange={handlePageChange} />
+      {/* <TopBar toggleDrawer={toggleDrawer} /> */}
+      {/* <Sidebar open={drawerOpen} onClose={toggleDrawer(false)} onPageChange={handlePageChange} /> */}
       <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
         {currentPage === 'Dashboard' && <Dashboard />}
         {currentPage === 'Inventory' && <InventoryList />}
