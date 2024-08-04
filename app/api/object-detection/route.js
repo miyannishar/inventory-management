@@ -44,11 +44,3 @@ export async function POST(request) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
