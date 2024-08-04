@@ -25,7 +25,7 @@ export async function POST(request) {
         {
           role: "user",
           content: [
-            { type: "text", text: `What food item is in this image? If it's one of these items: ${inventoryItems.join(', ')}, respond with that item name. If it's a food item not in the list, respond with the name of the food item. If its not a food item, respond with none` },
+            { type: "text", text: `Which fruit and vegetable is in this image? If it's one of these items: ${inventoryItems.join(', ')}, respond with that item name. If it's a fruit or vegetable not in the list, respond with the name of the fruit or vegetable. If its not a fruit or vegetable, respond with none` },
             { type: "image_url", image_url: { url: image } }
           ],
         },
