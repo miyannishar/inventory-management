@@ -32,8 +32,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import RestaurantIcon from "@mui/icons-material/Restaurant";
 import { db } from "../config/firebase-config";
 import {
   collection,
@@ -47,84 +45,81 @@ import CameraComponent from "./CameraComponent";
 import { styled } from "@mui/material/styles";
 import { PieChart, BarChart } from "@mui/x-charts";
 import { motion } from "framer-motion";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
 import RecipeSuggestion from "./RecipeSuggestion";
-
-// ... (keep all your existing color palettes and styled components)
-
 
 // Updated color palette
 const darkPalette = {
-    primary: {
-      main: "#bb86fc", // Light purple
-      light: "#e2b8ff",
-      dark: "#8858c8",
-    },
-    secondary: {
-      main: "#03dac6", // Teal
-      light: "#66fff9",
-      dark: "#00a896",
-    },
-    background: {
-      default: "#121212",
-      paper: "#1e1e1e",
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#b0b0b0",
-    },
-    error: {
-      main: "#cf6679",
-    },
-  };
-  
-  const lightPalette = {
-    primary: {
-      main: "#6200ee", // Deep purple
-      light: "#9c4dff",
-      dark: "#3700b3",
-    },
-    secondary: {
-      main: "#03dac6", // Teal
-      light: "#66fff9",
-      dark: "#00a896",
-    },
-    background: {
-      default: "#f5f5f5",
-      paper: "#ffffff",
-    },
-    text: {
-      primary: "#121212",
-      secondary: "#6e6e6e",
-    },
-  };
-  const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    background: theme.palette.background.paper,
-  }));
-  
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    color: theme.palette.text.primary,
-  }));
-  
-  const StyledButton = styled(Button)(({ theme }) => ({
-    borderRadius: 8,
-    padding: "8px 16px",
-    transition: "all 0.3s ease",
-    "&:hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    },
-  }));
-  
-  const ActionButton = styled(IconButton)(({ theme }) => ({
-    color: theme.palette.primary.main,
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-  }));
-  
+  primary: {
+    main: "#bb86fc", // Light purple
+    light: "#e2b8ff",
+    dark: "#8858c8",
+  },
+  secondary: {
+    main: "#03dac6", // Teal
+    light: "#66fff9",
+    dark: "#00a896",
+  },
+  background: {
+    default: "#121212",
+    paper: "#1e1e1e",
+  },
+  text: {
+    primary: "#ffffff",
+    secondary: "#b0b0b0",
+  },
+  error: {
+    main: "#cf6679",
+  },
+};
+
+const lightPalette = {
+  primary: {
+    main: "#6200ee", // Deep purple
+    light: "#9c4dff",
+    dark: "#3700b3",
+  },
+  secondary: {
+    main: "#03dac6", // Teal
+    light: "#66fff9",
+    dark: "#00a896",
+  },
+  background: {
+    default: "#f5f5f5",
+    paper: "#ffffff",
+  },
+  text: {
+    primary: "#121212",
+    secondary: "#6e6e6e",
+  },
+};
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  background: theme.palette.background.paper,
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  color: theme.palette.text.primary,
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: 8,
+  padding: "8px 16px",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  },
+}));
+
+const ActionButton = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  "&:hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
 
 const AnimatedCard = motion(Card);
 
@@ -143,8 +138,8 @@ export default function Dashboard() {
   const [openRecipeSuggestion, setOpenRecipeSuggestion] = useState(false);
   const [cameraMode, setCameraMode] = useState('');
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
 
+  const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const customTheme = createTheme({
     palette: darkMode ? darkPalette : lightPalette,
@@ -168,7 +163,6 @@ export default function Dashboard() {
       },
     },
   });
-
   useEffect(() => {
     fetchInventory();
   }, []);
@@ -217,9 +211,8 @@ export default function Dashboard() {
     if (detectedObject !== 'none') {
       if (cameraMode === 'add_new') {
         await updateInventory(detectedObject, 1);
-        setOpenNewItemDialog(false);
       } else {
-        await updateInventory(detectedObject, action === 'in' ? 1 : -1);
+        await updateInventory(detectedObject, cameraMode === 'add' ? 1 : -1);
       }
     } else {
       alert('No valid object detected');
@@ -230,6 +223,14 @@ export default function Dashboard() {
     if (newItemName.trim()) {
       await updateInventory(newItemName.trim(), 1);
       setNewItemName('');
+      setOpenNewItemDialog(false);
+    }
+  };
+
+  const addNewItem = async () => {
+    if (newItemName.trim() !== "") {
+      await updateInventory(newItemName.trim(), 0);
+      setNewItemName("");
       setOpenNewItemDialog(false);
     }
   };
@@ -402,7 +403,6 @@ export default function Dashboard() {
               startIcon={<AddIcon />}
               onClick={() => {
                 setAction("in");
-                setCameraMode("add");
                 setOpenCamera(true);
               }}
             >
@@ -414,7 +414,6 @@ export default function Dashboard() {
               startIcon={<RemoveIcon />}
               onClick={() => {
                 setAction("out");
-                setCameraMode("remove");
                 setOpenCamera(true);
               }}
             >
@@ -461,7 +460,6 @@ export default function Dashboard() {
               <CameraComponent
                 onDetection={handleDetection}
                 inventoryItems={Object.keys(inventory)}
-                mode={cameraMode}
               />
             </DialogContent>
           </Dialog>
@@ -499,16 +497,7 @@ export default function Dashboard() {
               <Button onClick={() => setOpenNewItemDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddNewItem}>Add</Button>
-              <Button
-                onClick={() => {
-                  setCameraMode('add_new');
-                  setOpenCamera(true);
-                }}
-                startIcon={<CameraAltIcon />}
-              >
-                Use Camera
-              </Button>
+              <Button onClick={addNewItem}>Add</Button>
             </DialogActions>
           </Dialog>
 
@@ -540,14 +529,12 @@ export default function Dashboard() {
               </Button>
             </DialogActions>
           </Dialog>
-
-          {/* Recipe Suggestion Dialog */}
-          <RecipeSuggestion
-            open={openRecipeSuggestion}
-            onClose={() => setOpenRecipeSuggestion(false)}
-            inventoryItems={Object.keys(inventory)}
-          />
         </Box>
+            <RecipeSuggestion
+              open={openRecipeSuggestion}
+              onClose={() => setOpenRecipeSuggestion(false)}
+              inventoryItems={Object.keys(inventory)}
+            />
       </Container>
     </ThemeProvider>
   );
