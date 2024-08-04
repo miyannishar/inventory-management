@@ -25,6 +25,7 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
+  InputAdornment
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -35,6 +36,7 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import { db } from "../config/firebase-config";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   collection,
   getDocs,
@@ -142,6 +144,7 @@ export default function Dashboard() {
   });
   const [openRecipeSuggestion, setOpenRecipeSuggestion] = useState(false);
   const [cameraMode, setCameraMode] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
@@ -234,6 +237,14 @@ export default function Dashboard() {
     }
   };
 
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filteredInventory = Object.entries(inventory).filter(([item, _]) =>
+    item.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <ThemeProvider theme={customTheme}>
       <CssBaseline />
@@ -256,6 +267,22 @@ export default function Dashboard() {
               {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
             </IconButton>
           </Box>
+
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            sx={{ mb: 4 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
 
           <Grid container spacing={4}>
             {/* Inventory Overview Chart */}
@@ -357,7 +384,7 @@ export default function Dashboard() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {Object.entries(inventory).map(([item, quantity]) => (
+                        {filteredInventory.map(([item, quantity]) => (
                           <TableRow key={item}>
                             <StyledTableCell component="th" scope="row">
                               {item}
