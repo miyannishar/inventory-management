@@ -36,13 +36,13 @@ To get a local copy up and running, follow these steps:
 
 
 ```bash
-git clone https://github.com/miyannishar/food-inventory-management.git
+git clone https://github.com/miyannishar/inventory-management.git
 ```
 
 2. Navigate to the project directory:
 
 ```bash
-cd food-inventory-management
+cd inventory-management
 ```
 
 3. Install dependencies:
