@@ -26,7 +26,7 @@ This project is an AI-powered Inventory Management System specifically designed 
 
 ## 🚀 Live Demo
 
-Check out the live demo deployed on Vercel: [\[Live Demo Link\]](https://inventory-management-ochre.vercel.app/)
+Check out the live demo deployed on Vercel: [\[Click Here!\]](https://inventory-management-ochre.vercel.app/)
 
 ## 🏁 Getting Started
 
@@ -97,8 +97,8 @@ Contributions, issues, and feature requests are welcome! Feel free to check [iss
 
 **Nishar Miya**
 
-- LinkedIn: [Your LinkedIn](https://www.linkedin.com/in/nishar-miya/)
-- GitHub: [@your-username](https://github.com/miyannishar)
+- LinkedIn: [Nishar Miya](https://www.linkedin.com/in/nishar-miya/)
+- GitHub: [@miyannishar](https://github.com/miyannishar)
 
 ## 🙏 Acknowledgments
 
