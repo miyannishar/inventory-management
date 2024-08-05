@@ -48,7 +48,6 @@ export async function POST(request) {
 
     const recipeText = data.choices[0].message.content;
 
-    // Parse the recipe text into a structured format
     const recipeParts = recipeText.split('\n\n');
     const recipe = {
       name: recipeParts[0].replace('Recipe: ', ''),

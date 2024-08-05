@@ -51,18 +51,15 @@ import { PieChart, BarChart } from "@mui/x-charts";
 import { motion } from "framer-motion";
 import RecipeSuggestion from "./RecipeSuggestion";
 
-// ... (keep all your existing color palettes and styled components)
 
-
-// Updated color palette
 const darkPalette = {
     primary: {
-      main: "#bb86fc", // Light purple
+      main: "#bb86fc",
       light: "#e2b8ff",
       dark: "#8858c8",
     },
     secondary: {
-      main: "#03dac6", // Teal
+      main: "#03dac6",
       light: "#66fff9",
       dark: "#00a896",
     },
@@ -81,12 +78,12 @@ const darkPalette = {
   
   const lightPalette = {
     primary: {
-      main: "#6200ee", // Deep purple
+      main: "#6200ee",
       light: "#9c4dff",
       dark: "#3700b3",
     },
     secondary: {
-      main: "#03dac6", // Teal
+      main: "#03dac6", 
       light: "#66fff9",
       dark: "#00a896",
     },

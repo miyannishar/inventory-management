@@ -17,7 +17,7 @@ const CameraComponent = ({ onDetection, inventoryItems, mode }) => {
   
     try {
       const response = await axios.post('/api/object-detection', {
-        image: imageSrc, // This should be a data URL
+        image: imageSrc, 
         inventoryItems: inventoryItems
       });
       const detectedObject = response.data.detectedObject;
