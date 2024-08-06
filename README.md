@@ -51,11 +51,30 @@ npm install
 ```
 
 4. Set up environment variables:
-Create a `.env.local` file in the root directory and add the following:
+Create a `.env.local` file in the root directory of your project. Add the following environment variables to the `.env.local` file:
 
 ```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
 OPENAI_API_KEY=your_openai_api_key
 ```
+
+
+Replace the placeholder values (`your_firebase_api_key`, `your_firebase_auth_domain`, etc.) with your actual Firebase and OpenAI credentials.
+
+To set up your Firebase project and obtain these credentials:
+i. Go to the [Firebase Console](https://console.firebase.google.com/)
+ii. Click on "Add project" or select an existing project
+iii. Follow the setup wizard to create your project
+iv. Once your project is ready, click on the web icon (`</>`) to add a web app to your project
+v. Register your app and Firebase will provide you with the configuration object containing these values
+
+For the OpenAI API key, sign up at the [OpenAI website](https://openai.com/api/) to get your API key.
+
 
 5. Run the development server:
 
