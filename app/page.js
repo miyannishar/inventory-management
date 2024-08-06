@@ -45,16 +45,16 @@ export default function Home() {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
       {/* <TopBar toggleDrawer={toggleDrawer} /> */}
       {/* <Sidebar open={drawerOpen} onClose={toggleDrawer(false)} onPageChange={handlePageChange} /> */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
-        {currentPage === 'Dashboard' && <Dashboard />}
-        {currentPage === 'Inventory' && <InventoryList />}
-        {currentPage === 'Add/Remove' && <AddRemoveItems />}
-        {currentPage === 'Analytics' && <Analytics />}
-        {currentPage === 'Settings' && <Settings />}
+      <Box component="main"sx={{ flexGrow: 1, p: 3, mt: 0, pt: 2 }}>
+        {currentPage === "Dashboard" && <Dashboard />}
+        {currentPage === "Inventory" && <InventoryList />}
+        {currentPage === "Add/Remove" && <AddRemoveItems />}
+        {currentPage === "Analytics" && <Analytics />}
+        {currentPage === "Settings" && <Settings />}
       </Box>
     </Box>
   );
