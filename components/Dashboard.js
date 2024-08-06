@@ -31,10 +31,9 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import LightModeIcon from "@mui/icons-material/LightMode";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import RestaurantIcon from "@mui/icons-material/Restaurant";
+import { Switch } from '@mui/material'
 import { db } from "../config/firebase-config";
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -260,9 +259,12 @@ export default function Dashboard() {
             >
               Inventory Dashboard
             </Typography>
-            <IconButton onClick={toggleDarkMode} color="inherit">
-              {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
+            <Switch
+              checked={darkMode}
+              onChange={toggleDarkMode}
+              color="default"
+              inputProps={{ 'aria-label': 'toggle dark mode' }}
+            />
           </Box>
 
           <TextField
