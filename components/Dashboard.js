@@ -36,6 +36,7 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import { Switch } from '@mui/material'
 import { db } from "../config/firebase-config";
 import SearchIcon from "@mui/icons-material/Search";
+import {Clear as ClearIcon} from '@mui/icons-material';
 import {
   collection,
   getDocs,
@@ -237,6 +238,10 @@ export default function Dashboard() {
     setSearchTerm(event.target.value);
   };
 
+  const handleClear = () => {
+    setSearchTerm(''); 
+  };
+
   const filteredInventory = Object.entries(inventory).filter(([item, _]) =>
     item.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -278,6 +283,13 @@ export default function Dashboard() {
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleClear}>
+                    <ClearIcon />
+                  </IconButton>
                 </InputAdornment>
               ),
             }}
