@@ -25,20 +25,23 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
-import { Switch } from '@mui/material'
+import { Switch } from "@mui/material";
 import { db } from "../config/firebase-config";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   setDoc,
@@ -50,79 +53,77 @@ import { PieChart, BarChart } from "@mui/x-charts";
 import { motion } from "framer-motion";
 import RecipeSuggestion from "./RecipeSuggestion";
 
-
 const darkPalette = {
-    primary: {
-      main: "#bb86fc",
-      light: "#e2b8ff",
-      dark: "#8858c8",
-    },
-    secondary: {
-      main: "#03dac6",
-      light: "#66fff9",
-      dark: "#00a896",
-    },
-    background: {
-      default: "#121212",
-      paper: "#1e1e1e",
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#b0b0b0",
-    },
-    error: {
-      main: "#cf6679",
-    },
-  };
-  
-  const lightPalette = {
-    primary: {
-      main: "#6200ee",
-      light: "#9c4dff",
-      dark: "#3700b3",
-    },
-    secondary: {
-      main: "#03dac6", 
-      light: "#66fff9",
-      dark: "#00a896",
-    },
-    background: {
-      default: "#f5f5f5",
-      paper: "#ffffff",
-    },
-    text: {
-      primary: "#121212",
-      secondary: "#6e6e6e",
-    },
-  };
-  const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    background: theme.palette.background.paper,
-  }));
-  
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    color: theme.palette.text.primary,
-  }));
-  
-  const StyledButton = styled(Button)(({ theme }) => ({
-    borderRadius: 8,
-    padding: "8px 16px",
-    transition: "all 0.3s ease",
-    "&:hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    },
-  }));
-  
-  const ActionButton = styled(IconButton)(({ theme }) => ({
-    color: theme.palette.primary.main,
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-  }));
-  
+  primary: {
+    main: "#bb86fc",
+    light: "#e2b8ff",
+    dark: "#8858c8",
+  },
+  secondary: {
+    main: "#03dac6",
+    light: "#66fff9",
+    dark: "#00a896",
+  },
+  background: {
+    default: "#121212",
+    paper: "#1e1e1e",
+  },
+  text: {
+    primary: "#ffffff",
+    secondary: "#b0b0b0",
+  },
+  error: {
+    main: "#cf6679",
+  },
+};
+
+const lightPalette = {
+  primary: {
+    main: "#6200ee",
+    light: "#9c4dff",
+    dark: "#3700b3",
+  },
+  secondary: {
+    main: "#03dac6",
+    light: "#66fff9",
+    dark: "#00a896",
+  },
+  background: {
+    default: "#f5f5f5",
+    paper: "#ffffff",
+  },
+  text: {
+    primary: "#121212",
+    secondary: "#6e6e6e",
+  },
+};
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  background: theme.palette.background.paper,
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  color: theme.palette.text.primary,
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: 8,
+  padding: "8px 16px",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  },
+}));
+
+const ActionButton = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  "&:hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
 
 const AnimatedCard = motion(Card);
 
@@ -138,12 +139,13 @@ export default function Dashboard() {
     open: false,
     item: null,
   });
+  const [editItem, setEditItem] = useState(null);
+  const [editItemName, setEditItemName] = useState("");
   const [openRecipeSuggestion, setOpenRecipeSuggestion] = useState(false);
-  const [cameraMode, setCameraMode] = useState('');
+  const [cameraMode, setCameraMode] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
-
 
   const customTheme = createTheme({
     palette: darkMode ? darkPalette : lightPalette,
@@ -213,22 +215,22 @@ export default function Dashboard() {
 
   const handleDetection = async (detectedObject) => {
     setOpenCamera(false);
-    if (detectedObject !== 'none') {
-      if (cameraMode === 'add_new') {
+    if (detectedObject !== "none") {
+      if (cameraMode === "add_new") {
         await updateInventory(detectedObject, 1);
         setOpenNewItemDialog(false);
       } else {
-        await updateInventory(detectedObject, action === 'in' ? 1 : -1);
+        await updateInventory(detectedObject, action === "in" ? 1 : -1);
       }
     } else {
-      alert('No valid object detected');
+      alert("No valid object detected");
     }
   };
 
   const handleAddNewItem = async () => {
     if (newItemName.trim()) {
       await updateInventory(newItemName.trim(), 1);
-      setNewItemName('');
+      setNewItemName("");
       setOpenNewItemDialog(false);
     }
   };
@@ -240,6 +242,57 @@ export default function Dashboard() {
   const filteredInventory = Object.entries(inventory).filter(([item, _]) =>
     item.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEdit = (item) => {
+    console.log(`hello: ${item}`);
+    setEditItem(item);
+    setEditItemName(item);
+  };
+
+  const handleSaveEdit = async (oldName, newName) => {
+    if (!newName) {
+      console.log("Error: newName is null or undefined");
+      return;
+    }
+    if (!oldName) {
+      console.log("Error: oldName is null or undefined");
+      return;
+    }
+    if (newName.trim() && oldName !== newName) {
+      try {
+        const newItemRef = doc(db, "inventory", newName);
+        const newItemSnap = await getDoc(newItemRef);
+
+        if (newItemSnap.exists()) {
+          alert("Item with this name already exists!");
+          return;
+        }
+
+        const oldItemRef = doc(db, "inventory", oldName);
+        await setDoc(newItemRef, { quantity: inventory[oldName] });
+
+        await deleteDoc(oldItemRef);
+
+        setInventory((prev) => {
+          const { [oldName]: _, ...rest } = prev;
+          return { ...rest, [newName]: prev[oldName] };
+        });
+
+        setEditItem(null);
+        console.log("success", newName);
+      } catch (error) {
+        console.log("Error:", error);
+      }
+    } else {
+      setEditItem(null);
+    }
+  };
+
+  /*const handleSaveEdit = (message) => {
+    // setEditItem(null);
+    console.log(message);
+    setEditStatus(false);
+  };*/
 
   return (
     <ThemeProvider theme={customTheme}>
@@ -263,7 +316,7 @@ export default function Dashboard() {
               checked={darkMode}
               onChange={toggleDarkMode}
               color="default"
-              inputProps={{ 'aria-label': 'toggle dark mode' }}
+              inputProps={{ "aria-label": "toggle dark mode" }}
             />
           </Box>
 
@@ -369,6 +422,7 @@ export default function Dashboard() {
                   <Typography variant="h6" gutterBottom color="secondary.main">
                     Inventory List
                   </Typography>
+
                   <StyledTableContainer>
                     <Table>
                       <TableHead>
@@ -386,7 +440,17 @@ export default function Dashboard() {
                         {filteredInventory.map(([item, quantity]) => (
                           <TableRow key={item}>
                             <StyledTableCell component="th" scope="row">
-                              {item}
+                              {editItem === item ? (
+                                <TextField
+                                  value={editItemName}
+                                  onChange={(e) =>
+                                    setEditItemName(e.target.value)
+                                  }
+                                  autoFocus
+                                />
+                              ) : (
+                                item
+                              )}
                             </StyledTableCell>
                             <StyledTableCell align="right">
                               {quantity}
@@ -409,6 +473,23 @@ export default function Dashboard() {
                               >
                                 <DeleteIcon />
                               </ActionButton>
+                              <ActionButton
+                                onClick={() => {
+                                  console.log("Edit Icon clicked"); // Debugging log
+                                  handleEdit(item);
+                                }}
+                              >
+                                <EditIcon />
+                              </ActionButton>
+                              {editItem === item && (
+                                <button
+                                  onClick={() =>
+                                    handleSaveEdit(item, editItemName)
+                                  }
+                                >
+                                  Save
+                                </button>
+                              )}
                             </StyledTableCell>
                           </TableRow>
                         ))}
@@ -528,7 +609,7 @@ export default function Dashboard() {
               <Button onClick={handleAddNewItem}>Add</Button>
               <Button
                 onClick={() => {
-                  setCameraMode('add_new');
+                  setCameraMode("add_new");
                   setOpenCamera(true);
                 }}
                 startIcon={<CameraAltIcon />}
