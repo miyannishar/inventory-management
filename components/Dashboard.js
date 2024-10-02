@@ -147,7 +147,7 @@ export default function Dashboard() {
   const [openRecipeSuggestion, setOpenRecipeSuggestion] = useState(false);
   const [cameraMode, setCameraMode] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [errorMessage, setErrorMessage] = useState("");
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const customTheme = createTheme({
@@ -256,7 +256,7 @@ export default function Dashboard() {
     setEditItemQuantity(inventory[item]);
   };
 
-  const handleSaveEdit = async (oldName, newName) => {
+  const handleSaveNameEdit = async (oldName, newName) => {
     if (!newName || !oldName) {
       console.log("Error: newName or oldName is null or undefined");
       return;
@@ -293,8 +293,22 @@ export default function Dashboard() {
 
   const handleSaveQuantityEdit = async (item) => {
     const newQuantity = Math.max(0, parseInt(editItemQuantity, 10) || 0);
+    if (newQuantity === 0) {
+      setErrorMessage("Quantity cannot be 0");
+      return true;
+    }
     await updateInventory(item, newQuantity - (inventory[item] || 0));
     setEditItemQuantity(0);
+    setErrorMessage("");
+    return false;
+  };
+
+  const handleSaveEdit = async (item) => {
+    const quantityError = await handleSaveQuantityEdit(item);
+    if (quantityError) {
+      return;
+    }
+    handleSaveNameEdit(item, editItemName);
   };
 
   return (
@@ -472,54 +486,62 @@ export default function Dashboard() {
                                   <TextField
                                     type="number"
                                     value={editItemQuantity}
-                                    onChange={(e) =>
-                                      setEditItemQuantity(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                      setEditItemQuantity(e.target.value);
+                                      setErrorMessage("");
+                                    }}
                                     size="small"
                                     inputProps={{ min: 0 }}
+                                    style={{ width: 100 }}
+                                    error={!!errorMessage}
+                                    helperText={errorMessage}
                                   />
                                 ) : (
                                   quantity
                                 )}
                               </StyledTableCell>
                               <StyledTableCell align="right">
-                                <ActionButton
-                                  onClick={() => updateInventory(item, 1)}
-                                >
-                                  <AddIcon />
-                                </ActionButton>
-                                <ActionButton
-                                  onClick={() => updateInventory(item, -1)}
-                                >
-                                  <RemoveIcon />
-                                </ActionButton>
-                                <ActionButton
-                                  onClick={() =>
-                                    setDeleteConfirmation({ open: true, item })
-                                  }
-                                >
-                                  <DeleteIcon />
-                                </ActionButton>
                                 {editItem === item ? (
                                   <StyledButton
                                     variant="outlined"
                                     color="primary"
-                                    startIcon={<SaveIcon />}
+                                    //startIcon={<SaveIcon />}
                                     onClick={() => {
-                                      handleSaveQuantityEdit(item);
-                                      handleSaveEdit(item, editItemName);
+                                      handleSaveEdit(item);
                                     }}
                                   >
                                     Save
                                   </StyledButton>
                                 ) : (
-                                  <ActionButton
-                                    onClick={() => {
-                                      handleEdit(item);
-                                    }}
-                                  >
-                                    <EditIcon />
-                                  </ActionButton>
+                                  <>
+                                    <ActionButton
+                                      onClick={() => updateInventory(item, 1)}
+                                    >
+                                      <AddIcon />
+                                    </ActionButton>
+                                    <ActionButton
+                                      onClick={() => updateInventory(item, -1)}
+                                    >
+                                      <RemoveIcon />
+                                    </ActionButton>
+                                    <ActionButton
+                                      onClick={() =>
+                                        setDeleteConfirmation({
+                                          open: true,
+                                          item,
+                                        })
+                                      }
+                                    >
+                                      <DeleteIcon />
+                                    </ActionButton>
+                                    <ActionButton
+                                      onClick={() => {
+                                        handleEdit(item);
+                                      }}
+                                    >
+                                      <EditIcon />
+                                    </ActionButton>
+                                  </>
                                 )}
                               </StyledTableCell>
                             </TableRow>
