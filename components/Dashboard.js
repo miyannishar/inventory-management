@@ -31,7 +31,6 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
@@ -47,6 +46,7 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  FieldPath,
 } from "firebase/firestore";
 import CameraComponent from "./CameraComponent";
 import { styled } from "@mui/material/styles";
@@ -147,7 +147,10 @@ export default function Dashboard() {
   const [openRecipeSuggestion, setOpenRecipeSuggestion] = useState(false);
   const [cameraMode, setCameraMode] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState({
+    nameError: "",
+    quantityError: "",
+  });
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const customTheme = createTheme({
@@ -250,16 +253,24 @@ export default function Dashboard() {
     item.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const setError = (field, message) => {
+    setErrorMessage((prev) => ({
+      ...prev,
+      [field]: message,
+    }));
+  };
+
   const handleEdit = (item) => {
     setEditItem(item);
     setEditItemName(item);
     setEditItemQuantity(inventory[item]);
+    setErrorMessage({ nameError: "", quantityError: "" });
   };
 
   const handleSaveNameEdit = async (oldName, newName) => {
-    if (!newName || !oldName) {
-      console.log("Error: newName or oldName is null or undefined");
-      return;
+    if (!newName) {
+      setError("nameError", "Name cannot be empty");
+      return false;
     }
     if (newName.trim() && oldName !== newName) {
       try {
@@ -267,8 +278,8 @@ export default function Dashboard() {
         const newItemSnap = await getDoc(newItemRef);
 
         if (newItemSnap.exists()) {
-          alert("Item with this name already exists!");
-          return;
+          setError("nameError", "Item with this name already exists");
+          return false;
         }
 
         const oldItemRef = doc(db, "inventory", oldName);
@@ -282,33 +293,36 @@ export default function Dashboard() {
         });
 
         setEditItem(null);
-        console.log("Sucess! New name:", newName);
+        return true;
       } catch (error) {
-        console.log("Error:", error);
+        setError("nameError", "An error occurred while updating the item");
+        return false;
       }
     } else {
       setEditItem(null);
+      return true;
     }
   };
 
   const handleSaveQuantityEdit = async (item) => {
     const newQuantity = Math.max(0, parseInt(editItemQuantity, 10) || 0);
     if (newQuantity === 0) {
-      setErrorMessage("Quantity cannot be 0");
-      return true;
+      setError("quantityError", "Quantity cannot be 0");
+      return false;
     }
     await updateInventory(item, newQuantity - (inventory[item] || 0));
-    setEditItemQuantity(0);
-    setErrorMessage("");
-    return false;
+    return true;
   };
 
   const handleSaveEdit = async (item) => {
-    const quantityError = await handleSaveQuantityEdit(item);
-    if (quantityError) {
+    const quantitySaved = await handleSaveQuantityEdit(item);
+    if (!quantitySaved) {
       return;
     }
-    handleSaveNameEdit(item, editItemName);
+    const nameSaved = await handleSaveNameEdit(item, editItemName);
+    if (!nameSaved) {
+      return;
+    }
   };
 
   return (
@@ -465,87 +479,98 @@ export default function Dashboard() {
                           .sort(([itemA], [itemB]) =>
                             itemA.localeCompare(itemB)
                           )
-                          .map(([item, quantity]) => (
-                            <TableRow key={item}>
-                              <StyledTableCell component="th" scope="row">
-                                {editItem === item ? (
+                          .map(([item, quantity]) => {
+                            const isEditing = editItem === item;
+
+                            return isEditing ? (
+                              <TableRow
+                                key={item}
+                                style={{ verticalAlign: "top" }}
+                              >
+                                <StyledTableCell component="th" scope="row">
                                   <TextField
                                     value={editItemName}
-                                    onChange={(e) =>
-                                      setEditItemName(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                      setEditItemName(e.target.value);
+                                      setErrorMessage((prev) => ({
+                                        ...prev,
+                                        nameError: "",
+                                      }));
+                                    }}
                                     autoFocus
                                     size="small"
+                                    error={!!errorMessage.nameError}
+                                    helperText={errorMessage.nameError}
                                   />
-                                ) : (
-                                  item
-                                )}
-                              </StyledTableCell>
-                              <StyledTableCell align="center">
-                                {editItem === item ? (
+                                </StyledTableCell>
+                                <StyledTableCell align="center">
                                   <TextField
                                     type="number"
                                     value={editItemQuantity}
                                     onChange={(e) => {
                                       setEditItemQuantity(e.target.value);
-                                      setErrorMessage("");
+                                      setErrorMessage((prev) => ({
+                                        ...prev,
+                                        quantityError: "",
+                                      }));
                                     }}
                                     size="small"
                                     inputProps={{ min: 0 }}
-                                    style={{ width: 100 }}
-                                    error={!!errorMessage}
-                                    helperText={errorMessage}
+                                    style={{ width: 150 }}
+                                    error={!!errorMessage.quantityError}
+                                    helperText={errorMessage.quantityError}
                                   />
-                                ) : (
-                                  quantity
-                                )}
-                              </StyledTableCell>
-                              <StyledTableCell align="right">
-                                {editItem === item ? (
+                                </StyledTableCell>
+                                <StyledTableCell align="right">
                                   <StyledButton
                                     variant="outlined"
                                     color="primary"
-                                    //startIcon={<SaveIcon />}
                                     onClick={() => {
                                       handleSaveEdit(item);
                                     }}
                                   >
                                     Save
                                   </StyledButton>
-                                ) : (
-                                  <>
-                                    <ActionButton
-                                      onClick={() => updateInventory(item, 1)}
-                                    >
-                                      <AddIcon />
-                                    </ActionButton>
-                                    <ActionButton
-                                      onClick={() => updateInventory(item, -1)}
-                                    >
-                                      <RemoveIcon />
-                                    </ActionButton>
-                                    <ActionButton
-                                      onClick={() =>
-                                        setDeleteConfirmation({
-                                          open: true,
-                                          item,
-                                        })
-                                      }
-                                    >
-                                      <DeleteIcon />
-                                    </ActionButton>
-                                    <ActionButton
-                                      onClick={() => {
-                                        handleEdit(item);
-                                      }}
-                                    >
-                                      <EditIcon />
-                                    </ActionButton>
-                                  </>
-                                )}
-                              </StyledTableCell>
-                            </TableRow>
-                          ))}
+                                </StyledTableCell>
+                              </TableRow>
+                            ) : (
+                              <TableRow key={item}>
+                                <StyledTableCell component="th" scope="row">
+                                  {item}
+                                </StyledTableCell>
+                                <StyledTableCell align="center">
+                                  {quantity}
+                                </StyledTableCell>
+                                <StyledTableCell align="right">
+                                  <ActionButton
+                                    onClick={() => updateInventory(item, 1)}
+                                  >
+                                    <AddIcon />
+                                  </ActionButton>
+                                  <ActionButton
+                                    onClick={() => updateInventory(item, -1)}
+                                  >
+                                    <RemoveIcon />
+                                  </ActionButton>
+                                  <ActionButton
+                                    onClick={() =>
+                                      setDeleteConfirmation({
+                                        open: true,
+                                        item,
+                                      })
+                                    }
+                                  >
+                                    <DeleteIcon />
+                                  </ActionButton>
+                                  <ActionButton
+                                    onClick={() => handleEdit(item)}
+                                  >
+                                    <EditIcon />
+                                  </ActionButton>
+                                </StyledTableCell>
+                              </TableRow>
+                            );
+                          })}
                       </TableBody>
                     </Table>
                   </StyledTableContainer>
