@@ -25,25 +25,28 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
-import { Switch } from '@mui/material'
+import { Switch } from "@mui/material";
 import { db } from "../config/firebase-config";
 import SearchIcon from "@mui/icons-material/Search";
-import {Clear as ClearIcon} from '@mui/icons-material';
+import { Clear as ClearIcon } from "@mui/icons-material";
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   setDoc,
   deleteDoc,
+  FieldPath,
 } from "firebase/firestore";
 import CameraComponent from "./CameraComponent";
 import { styled } from "@mui/material/styles";
@@ -51,79 +54,78 @@ import { PieChart, BarChart } from "@mui/x-charts";
 import { motion } from "framer-motion";
 import RecipeSuggestion from "./RecipeSuggestion";
 
-
 const darkPalette = {
-    primary: {
-      main: "#bb86fc",
-      light: "#e2b8ff",
-      dark: "#8858c8",
-    },
-    secondary: {
-      main: "#03dac6",
-      light: "#66fff9",
-      dark: "#00a896",
-    },
-    background: {
-      default: "#121212",
-      paper: "#1e1e1e",
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#b0b0b0",
-    },
-    error: {
-      main: "#cf6679",
-    },
-  };
-  
-  const lightPalette = {
-    primary: {
-      main: "#6200ee",
-      light: "#9c4dff",
-      dark: "#3700b3",
-    },
-    secondary: {
-      main: "#03dac6", 
-      light: "#66fff9",
-      dark: "#00a896",
-    },
-    background: {
-      default: "#f5f5f5",
-      paper: "#ffffff",
-    },
-    text: {
-      primary: "#121212",
-      secondary: "#6e6e6e",
-    },
-  };
-  const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    background: theme.palette.background.paper,
-  }));
-  
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    color: theme.palette.text.primary,
-  }));
-  
-  const StyledButton = styled(Button)(({ theme }) => ({
-    borderRadius: 8,
-    padding: "8px 16px",
-    transition: "all 0.3s ease",
-    "&:hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    },
-  }));
-  
-  const ActionButton = styled(IconButton)(({ theme }) => ({
-    color: theme.palette.primary.main,
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-  }));
-  
+  primary: {
+    main: "#bb86fc",
+    light: "#e2b8ff",
+    dark: "#8858c8",
+  },
+  secondary: {
+    main: "#03dac6",
+    light: "#66fff9",
+    dark: "#00a896",
+  },
+  background: {
+    default: "#121212",
+    paper: "#1e1e1e",
+  },
+  text: {
+    primary: "#ffffff",
+    secondary: "#b0b0b0",
+  },
+  error: {
+    main: "#cf6679",
+  },
+};
+
+const lightPalette = {
+  primary: {
+    main: "#6200ee",
+    light: "#9c4dff",
+    dark: "#3700b3",
+  },
+  secondary: {
+    main: "#03dac6",
+    light: "#66fff9",
+    dark: "#00a896",
+  },
+  background: {
+    default: "#f5f5f5",
+    paper: "#ffffff",
+  },
+  text: {
+    primary: "#121212",
+    secondary: "#6e6e6e",
+  },
+};
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  background: theme.palette.background.paper,
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  color: theme.palette.text.primary,
+  width: "25%",
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: 8,
+  padding: "8px 16px",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  },
+}));
+
+const ActionButton = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  "&:hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
 
 const AnimatedCard = motion(Card);
 
@@ -139,12 +141,17 @@ export default function Dashboard() {
     open: false,
     item: null,
   });
+  const [editItem, setEditItem] = useState(null);
+  const [editItemName, setEditItemName] = useState("");
+  const [editItemQuantity, setEditItemQuantity] = useState(0);
   const [openRecipeSuggestion, setOpenRecipeSuggestion] = useState(false);
-  const [cameraMode, setCameraMode] = useState('');
+  const [cameraMode, setCameraMode] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [errorMessage, setErrorMessage] = useState({
+    nameError: "",
+    quantityError: "",
+  });
   const toggleDarkMode = () => setDarkMode(!darkMode);
-
 
   const customTheme = createTheme({
     palette: darkMode ? darkPalette : lightPalette,
@@ -214,22 +221,22 @@ export default function Dashboard() {
 
   const handleDetection = async (detectedObject) => {
     setOpenCamera(false);
-    if (detectedObject !== 'none') {
-      if (cameraMode === 'add_new') {
+    if (detectedObject !== "none") {
+      if (cameraMode === "add_new") {
         await updateInventory(detectedObject, 1);
         setOpenNewItemDialog(false);
       } else {
-        await updateInventory(detectedObject, action === 'in' ? 1 : -1);
+        await updateInventory(detectedObject, action === "in" ? 1 : -1);
       }
     } else {
-      alert('No valid object detected');
+      alert("No valid object detected");
     }
   };
 
   const handleAddNewItem = async () => {
     if (newItemName.trim()) {
       await updateInventory(newItemName.trim(), 1);
-      setNewItemName('');
+      setNewItemName("");
       setOpenNewItemDialog(false);
     }
   };
@@ -239,12 +246,84 @@ export default function Dashboard() {
   };
 
   const handleClear = () => {
-    setSearchTerm(''); 
+    setSearchTerm("");
   };
 
   const filteredInventory = Object.entries(inventory).filter(([item, _]) =>
     item.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const setError = (field, message) => {
+    setErrorMessage((prev) => ({
+      ...prev,
+      [field]: message,
+    }));
+  };
+
+  const handleEdit = (item) => {
+    setEditItem(item);
+    setEditItemName(item);
+    setEditItemQuantity(inventory[item]);
+    setErrorMessage({ nameError: "", quantityError: "" });
+  };
+
+  const handleSaveNameEdit = async (oldName, newName) => {
+    if (!newName) {
+      setError("nameError", "Name cannot be empty");
+      return false;
+    }
+    if (newName.trim() && oldName !== newName) {
+      try {
+        const newItemRef = doc(db, "inventory", newName);
+        const newItemSnap = await getDoc(newItemRef);
+
+        if (newItemSnap.exists()) {
+          setError("nameError", "Item with this name already exists");
+          return false;
+        }
+
+        const oldItemRef = doc(db, "inventory", oldName);
+        await setDoc(newItemRef, { quantity: inventory[oldName] });
+
+        await deleteDoc(oldItemRef);
+
+        setInventory((prev) => {
+          const { [oldName]: _, ...rest } = prev;
+          return { ...rest, [newName]: prev[oldName] };
+        });
+
+        setEditItem(null);
+        return true;
+      } catch (error) {
+        setError("nameError", "An error occurred while updating the item");
+        return false;
+      }
+    } else {
+      setEditItem(null);
+      return true;
+    }
+  };
+
+  const handleSaveQuantityEdit = async (item) => {
+    const newQuantity = Math.max(0, parseInt(editItemQuantity, 10) || 0);
+    if (newQuantity === 0) {
+      setError("quantityError", "Quantity cannot be 0");
+      return false;
+    }
+    await updateInventory(item, newQuantity - (inventory[item] || 0));
+    return true;
+  };
+
+  const handleSaveEdit = async (item) => {
+    const quantitySaved = await handleSaveQuantityEdit(item);
+    if (!quantitySaved) {
+      return;
+    }
+    const nameSaved = await handleSaveNameEdit(item, editItemName);
+    if (!nameSaved) {
+      return;
+    }
+  };
 
   return (
     <ThemeProvider theme={customTheme}>
@@ -268,7 +347,7 @@ export default function Dashboard() {
               checked={darkMode}
               onChange={toggleDarkMode}
               color="default"
-              inputProps={{ 'aria-label': 'toggle dark mode' }}
+              inputProps={{ "aria-label": "toggle dark mode" }}
             />
           </Box>
 
@@ -381,12 +460,13 @@ export default function Dashboard() {
                   <Typography variant="h6" gutterBottom color="secondary.main">
                     Inventory List
                   </Typography>
+
                   <StyledTableContainer>
                     <Table>
                       <TableHead>
                         <TableRow>
                           <StyledTableCell>Item</StyledTableCell>
-                          <StyledTableCell align="right">
+                          <StyledTableCell align="center">
                             Quantity
                           </StyledTableCell>
                           <StyledTableCell align="right">
@@ -395,35 +475,102 @@ export default function Dashboard() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {filteredInventory.map(([item, quantity]) => (
-                          <TableRow key={item}>
-                            <StyledTableCell component="th" scope="row">
-                              {item}
-                            </StyledTableCell>
-                            <StyledTableCell align="right">
-                              {quantity}
-                            </StyledTableCell>
-                            <StyledTableCell align="right">
-                              <ActionButton
-                                onClick={() => updateInventory(item, 1)}
+                        {filteredInventory
+                          .sort(([itemA], [itemB]) =>
+                            itemA.localeCompare(itemB)
+                          )
+                          .map(([item, quantity]) => {
+                            const isEditing = editItem === item;
+
+                            return isEditing ? (
+                              <TableRow
+                                key={item}
+                                style={{ verticalAlign: "top" }}
                               >
-                                <AddIcon />
-                              </ActionButton>
-                              <ActionButton
-                                onClick={() => updateInventory(item, -1)}
-                              >
-                                <RemoveIcon />
-                              </ActionButton>
-                              <ActionButton
-                                onClick={() =>
-                                  setDeleteConfirmation({ open: true, item })
-                                }
-                              >
-                                <DeleteIcon />
-                              </ActionButton>
-                            </StyledTableCell>
-                          </TableRow>
-                        ))}
+                                <StyledTableCell component="th" scope="row">
+                                  <TextField
+                                    value={editItemName}
+                                    onChange={(e) => {
+                                      setEditItemName(e.target.value);
+                                      setErrorMessage((prev) => ({
+                                        ...prev,
+                                        nameError: "",
+                                      }));
+                                    }}
+                                    autoFocus
+                                    size="small"
+                                    error={!!errorMessage.nameError}
+                                    helperText={errorMessage.nameError}
+                                  />
+                                </StyledTableCell>
+                                <StyledTableCell align="center">
+                                  <TextField
+                                    type="number"
+                                    value={editItemQuantity}
+                                    onChange={(e) => {
+                                      setEditItemQuantity(e.target.value);
+                                      setErrorMessage((prev) => ({
+                                        ...prev,
+                                        quantityError: "",
+                                      }));
+                                    }}
+                                    size="small"
+                                    inputProps={{ min: 0 }}
+                                    style={{ width: 150 }}
+                                    error={!!errorMessage.quantityError}
+                                    helperText={errorMessage.quantityError}
+                                  />
+                                </StyledTableCell>
+                                <StyledTableCell align="right">
+                                  <StyledButton
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => {
+                                      handleSaveEdit(item);
+                                    }}
+                                  >
+                                    Save
+                                  </StyledButton>
+                                </StyledTableCell>
+                              </TableRow>
+                            ) : (
+                              <TableRow key={item}>
+                                <StyledTableCell component="th" scope="row">
+                                  {item}
+                                </StyledTableCell>
+                                <StyledTableCell align="center">
+                                  {quantity}
+                                </StyledTableCell>
+                                <StyledTableCell align="right">
+                                  <ActionButton
+                                    onClick={() => updateInventory(item, 1)}
+                                  >
+                                    <AddIcon />
+                                  </ActionButton>
+                                  <ActionButton
+                                    onClick={() => updateInventory(item, -1)}
+                                  >
+                                    <RemoveIcon />
+                                  </ActionButton>
+                                  <ActionButton
+                                    onClick={() =>
+                                      setDeleteConfirmation({
+                                        open: true,
+                                        item,
+                                      })
+                                    }
+                                  >
+                                    <DeleteIcon />
+                                  </ActionButton>
+                                  <ActionButton
+                                    onClick={() => handleEdit(item)}
+                                  >
+                                    <EditIcon />
+                                  </ActionButton>
+                                </StyledTableCell>
+                              </TableRow>
+                            );
+                          })}
                       </TableBody>
                     </Table>
                   </StyledTableContainer>
@@ -540,7 +687,7 @@ export default function Dashboard() {
               <Button onClick={handleAddNewItem}>Add</Button>
               <Button
                 onClick={() => {
-                  setCameraMode('add_new');
+                  setCameraMode("add_new");
                   setOpenCamera(true);
                 }}
                 startIcon={<CameraAltIcon />}
